@@ -3,6 +3,7 @@ import sys
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 
 def main():
@@ -14,18 +15,28 @@ def main():
     if len(sys.argv) < 2:
         print("Necesito un prompt")
         sys.exit(2)
+    verbose_flag = False
+
+    if len(sys.argv) == 3 and sys.argv[2] == "--verbose":
+        verbose_flag = True
     prompt = sys.argv[1]
+
+    messages = [
+        types.Content(role="user", parts=[types.Part(text=prompt)]),
+    ]
 
     response = client.models.generate_content(
         model="gemini-3-flash-preview",
-        contents=prompt,
+        contents=messages,
     )
     print(response.text)
     if response is None or response.usage_metadata is None:
         print("Respuesta anormal")
         return
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+    if verbose_flag:
+        print(f"User prompt: {prompt}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
 
 main()
